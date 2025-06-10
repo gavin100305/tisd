@@ -38,3 +38,6 @@ gunicorn==21.2.0
 # Additional Utilities
 python-dateutil==2.8.2
 six==1.16.0
+
+dj-database-url>=2.0.0
+psycopg2-binary>=2.9.5
