@@ -16,7 +16,8 @@ pandas==2.1.4
 matplotlib==3.8.2
 
 # PDF Generation
-xhtml2pdf==0.2.13
+xhtml2pdf==0.2.16
+reportlab==4.0.9
 
 # AI/ML Integration
 google-generativeai==0.3.2
