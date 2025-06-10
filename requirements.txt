@@ -5,6 +5,13 @@ django-cors-headers==4.3.1
 django-filter==23.5
 python-dotenv==1.0.1
 
+# Database (Essential for Render)
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
+
+# Static Files (Essential for Render)
+whitenoise==6.6.0
+
 # Image and Media Handling
 Pillow==10.2.0
 
@@ -28,6 +35,6 @@ markdown==3.5.2
 # Production Server
 gunicorn==21.2.0
 
-# Additional Utilities (if needed)
+# Additional Utilities
 python-dateutil==2.8.2
 six==1.16.0
