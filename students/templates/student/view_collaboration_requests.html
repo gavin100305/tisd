@@ -1,0 +1,593 @@
+{% extends '../base.html' %}
+{% load static %}
+
+{% block title %}Collaboration Requests | TISD{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Core Styles */
+    .container {
+        padding: 2.5rem 0;
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Background Elements */
+    body {
+        background-color: #000000;
+        color: white;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Remove the gradient elements */
+    .bg-elements {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+    }
+
+    .static-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.05;
+        z-index: -1;
+        background-image: radial-gradient(#666666 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+
+    /* Header Section */
+    .header-section {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: rgba(15, 15, 15, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(157, 78, 221, 0.15);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .header-section h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 0.7rem;
+        margin-bottom: 2rem;
+        background: rgba(15, 15, 15, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 16px;
+        padding: 1rem;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    .filter-tab {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .filter-tab:hover {
+        color: white;
+        background: rgba(168, 85, 247, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .filter-tab.active {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a855f7;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    /* Alert Messages */
+    .alert {
+        background: rgba(15, 12, 24, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid;
+        border-radius: 12px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .alert::before {
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 1.3rem;
+    }
+
+    .alert-success {
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.1);
+        color: #5ae6a8;
+    }
+
+    .alert-success::before {
+        content: '\f058';
+        color: #5ae6a8;
+    }
+
+    .alert-danger {
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.1);
+        color: #ff6b6b;
+    }
+
+    .alert-danger::before {
+        content: '\f057';
+        color: #ff6b6b;
+    }
+
+    /* Request Sections */
+    .requests-section {
+        background: rgba(15, 15, 15, 0.8);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(157, 78, 221, 0.15);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+        background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .request-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    /* Request Card */
+    .request-card {
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .request-card:hover {
+        border-color: rgba(157, 78, 221, 0.4);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(157, 78, 221, 0.2);
+    }
+
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .project-info h3 {
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .request-date {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-pending {
+        background: rgba(234, 179, 8, 0.1);
+        color: #eab308;
+        border: 1px solid rgba(234, 179, 8, 0.2);
+    }
+
+    .status-accepted {
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .request-details {
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-item {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0.75rem;
+    }
+
+    .detail-item strong {
+        color: #9d4edd;
+        font-weight: 500;
+    }
+
+    /* Action Buttons */
+    .request-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-accept {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-accept:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-reject {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-reject:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .btn-meeting {
+        background: rgba(168, 85, 247, 0.1);
+        color: #a855f7;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-meeting:hover {
+        background: rgba(168, 85, 247, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+    }
+
+    .btn-schedule {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-schedule:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 0;
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        margin-top: 2rem;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Staggered Animation for Cards */
+    .request-card:nth-child(1) { animation-delay: 0.1s; }
+    .request-card:nth-child(2) { animation-delay: 0.2s; }
+    .request-card:nth-child(3) { animation-delay: 0.3s; }
+    .request-card:nth-child(4) { animation-delay: 0.4s; }
+    .request-card:nth-child(5) { animation-delay: 0.5s; }
+    .request-card:nth-child(6) { animation-delay: 0.6s; }
+
+    /* Responsive Design */
+    @media (min-width: 768px) {
+        .request-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1.5rem;
+        }
+
+        .header-section {
+            padding: 1.5rem;
+        }
+
+        .header-section h1 {
+            font-size: 2rem;
+        }
+
+        .filter-tabs {
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            width: calc(50% - 0.5rem);
+            text-align: center;
+        }
+
+        .request-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            align-self: flex-start;
+        }
+
+        .request-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-elements">
+    <div class="static-pattern"></div>
+</div>
+
+<div class="container">
+    <div class="header-section">
+        <h1>Collaboration Requests</h1>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="filter-tabs">
+        <a href="{% url 'view_collaboration_requests' %}" class="filter-tab {% if not request.GET.status %}active{% endif %}">
+            All
+        </a>
+        <a href="{% url 'view_collaboration_requests' %}?status=pending" class="filter-tab {% if request.GET.status == 'pending' %}active{% endif %}">
+            Pending
+        </a>
+        <a href="{% url 'view_collaboration_requests' %}?status=accepted" class="filter-tab {% if request.GET.status == 'accepted' %}active{% endif %}">
+            Accepted
+        </a>
+        <a href="{% url 'view_collaboration_requests' %}?status=rejected" class="filter-tab {% if request.GET.status == 'rejected' %}active{% endif %}">
+            Rejected
+        </a>
+    </div>
+
+    {% if individual_requests or group_requests %}
+        {% if individual_requests %}
+        <div class="requests-section">
+            <h2 class="section-title">Individual Project Requests</h2>
+            <div class="request-grid">
+                {% for request in individual_requests %}
+                <div class="request-card">
+                    <div class="request-header">
+                        <div class="project-info">
+                            <h3>{{ request.project.title }}</h3>
+                            <p class="request-date">Submitted on {{ request.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <span class="status-badge status-{{ request.status }}">
+                            {{ request.status|title }}
+                        </span>
+                    </div>
+                    
+                    <div class="request-details">
+                        <p class="detail-item"><strong>From:</strong> {{ request.collaborator.full_name }}</p>
+                        <p class="detail-item"><strong>Message:</strong> {{ request.message }}</p>
+                        <p class="detail-item"><strong>Proposed Contribution:</strong> {{ request.proposed_contribution }}</p>
+                    </div>
+
+                    {% if request.status == 'pending' %}
+                    <div class="request-actions">
+                        <form method="POST" action="{% url 'handle_collaboration_request' request.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn btn-accept">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'handle_collaboration_request' request.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% elif request.status == 'accepted' %}
+
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if group_requests %}
+        <div class="requests-section">
+            <h2 class="section-title">Group Project Requests</h2>
+            <div class="request-grid">
+                {% for request in group_requests %}
+                <div class="request-card">
+                    <div class="request-header">
+                        <div class="project-info">
+                            <h3>{{ request.project.title }}</h3>
+                            <p class="request-date">Submitted on {{ request.created_at|date:"M d, Y" }}</p>
+                            <p class="detail-item"><strong>Group:</strong> {{ request.project.group.name }}</p>
+                        </div>
+                        <span class="status-badge status-{{ request.status }}">
+                            {{ request.status|title }}
+                        </span>
+                    </div>
+                    
+                    <div class="request-details">
+                        <p class="detail-item"><strong>From:</strong> {{ request.collaborator.full_name }}</p>
+                        <p class="detail-item"><strong>Message:</strong> {{ request.message }}</p>
+                        <p class="detail-item"><strong>Proposed Contribution:</strong> {{ request.proposed_contribution }}</p>
+                    </div>
+
+                    {% if request.status == 'pending' and is_group_leader %}
+                    <div class="request-actions">
+                        <form method="POST" action="{% url 'handle_collaboration_request' request.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit" class="btn btn-accept">
+                                <i class="fas fa-check"></i> Accept
+                            </button>
+                        </form>
+                        <form method="POST" action="{% url 'handle_collaboration_request' request.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-reject">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% elif request.status == 'accepted' %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <p>No collaboration requests found.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Add hover effect animations for button interactions
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('mouseover', function() {
+            this.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        });
+    });
+
+    // Add subtle entrance animation for page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            document.querySelectorAll('.request-card').forEach((card, index) => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            });
+        }, 100);
+    });
+</script>
+{% endblock %}

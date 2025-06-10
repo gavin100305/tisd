@@ -1,0 +1,675 @@
+{% extends 'college/base.html' %}
+{% load static %}
+
+{% block title %}Registered Mentors{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mentors-container {
+        padding: 2rem 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    .welcome-section {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        position: relative;
+        overflow: hidden;
+        animation: fadeInDown 0.8s ease-out forwards;
+    }
+
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(20, 20, 20, 0.3), transparent);
+        z-index: -1;
+    }
+
+    .welcome-section h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        color: white;
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out 0.4s forwards;
+    }
+
+    .welcome-section h1 span {
+        color: #9d4edd;
+        position: relative;
+        display: inline-block;
+    }
+
+    .welcome-section h1 span::after {
+        content: "";
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        width: 0;
+        height: 8px;
+        background-color: rgba(157, 78, 221, 0.15);
+        z-index: -1;
+        border-radius: 4px;
+        animation: lineGrow 0.6s ease-out 1s forwards;
+    }
+
+    .welcome-section p {
+        color: #9d9d9d;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out 0.6s forwards;
+    }
+
+    .stats-section {
+        margin-bottom: 3rem;
+        opacity: 0;
+        animation: fadeIn 0.8s ease-out 0.7s forwards;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-card {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        transform: scale(0.9);
+        opacity: 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .stat-card:nth-child(1) {
+        animation: scaleIn 0.5s ease-out 0.8s forwards;
+    }
+    
+    .stat-card:nth-child(2) {
+        animation: scaleIn 0.5s ease-out 0.9s forwards;
+    }
+    
+    .stat-card:nth-child(3) {
+        animation: scaleIn 0.5s ease-out 1.0s forwards;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(157, 78, 221, 0.3);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #9d4edd;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #e0e0e0;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .filter-section {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        animation: fadeInUp 0.6s ease-out 1.1s forwards;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-select {
+        background: rgba(15, 15, 15, 0.8);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 8px;
+        color: #F3F4F6;
+        padding: 0.7rem 1rem;
+        min-width: 200px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #9d4edd;
+        box-shadow: 0 0 0 2px rgba(157, 78, 221, 0.25);
+    }
+
+    .filter-select option {
+        background-color: #1a1a2e;
+        color: #F3F4F6;
+    }
+
+    .btn-filter {
+        background: linear-gradient(90deg, #9d4edd, #8b5cf6);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.7rem 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(157, 78, 221, 0.25);
+    }
+
+    .btn-filter:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(157, 78, 221, 0.35);
+    }
+
+    .mentors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .mentor-card {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        height: 100%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    .mentor-card:nth-child(3n+1) {
+        animation: fadeInUp 0.6s ease-out calc(1.2s + var(--i, 0) * 0.1s) forwards;
+    }
+    
+    .mentor-card:nth-child(3n+2) {
+        animation: fadeInUp 0.6s ease-out calc(1.3s + var(--i, 0) * 0.1s) forwards;
+    }
+    
+    .mentor-card:nth-child(3n+3) {
+        animation: fadeInUp 0.6s ease-out calc(1.4s + var(--i, 0) * 0.1s) forwards;
+    }
+
+    .mentor-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 0;
+        background: #9d4edd;
+        transition: height 0.3s ease;
+    }
+
+    .mentor-card:hover::before {
+        height: 100%;
+    }
+
+    .mentor-card:hover {
+        transform: translateY(-10px);
+        border-color: rgba(157, 78, 221, 0.3);
+    }
+
+    .mentor-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        justify-content: space-between;
+    }
+
+    .mentor-info-section {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .mentor-image {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        margin-right: 1.5rem;
+        border: 3px solid #9d4edd;
+        padding: 3px;
+        background: rgba(157, 78, 221, 0.1);
+        transition: all 0.3s ease;
+        object-fit: cover;
+    }
+
+    .mentor-card:hover .mentor-image {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
+    }
+
+    .mentor-info h3 {
+        color: white;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .mentor-info p {
+        color: #D1D5DB;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .status-approved {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .status-rejected {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .mentor-details {
+        background: rgba(15, 15, 15, 0.5);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin-top: 1rem;
+    }
+
+    .detail-item {
+        margin-bottom: 0.8rem;
+        display: flex;
+    }
+
+    .detail-label {
+        color: #9d4edd;
+        font-size: 0.9rem;
+        font-weight: 500;
+        min-width: 120px;
+        opacity: 0.8;
+    }
+
+    .detail-value {
+        color: #F3F4F6;
+        font-size: 0.95rem;
+    }
+
+    .detail-value a {
+        color: #9d4edd;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .detail-value a:hover {
+        color: #8b5cf6;
+        text-decoration: underline;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        color: #D1D5DB;
+        opacity: 0;
+        animation: fadeIn 0.6s ease-out 1.2s forwards;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #9d4edd;
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .remove-btn {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .remove-btn:hover {
+        background: rgba(220, 53, 69, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .modal-content {
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        color: #e0e0e0;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid rgba(220, 53, 69, 0.3);
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid rgba(220, 53, 69, 0.3);
+        padding: 1rem 1.5rem;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+
+    /* Animation Keyframes */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    @keyframes lineGrow {
+        from {
+            width: 0;
+        }
+        to {
+            width: 100%;
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .welcome-section h1 {
+            font-size: 2rem;
+        }
+        
+        .welcome-section p {
+            font-size: 1rem;
+        }
+        
+        .filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-select {
+            width: 100%;
+        }
+        
+        .mentors-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mentors-container">
+    <div class="welcome-section">
+        <h1>Registered <span>Mentors</span></h1>
+        <p>View and manage all registered mentors from your institution</p>
+    </div>
+
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_mentors }}</div>
+                <div class="stat-label">Total Mentors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ active_mentors }}</div>
+                <div class="stat-label">Active Mentors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ pending_mentors }}</div>
+                <div class="stat-label">Pending Approvals</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <form method="GET" class="filter-form">
+            <select name="status" class="filter-select">
+                <option value="">All Status</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+            <select name="specialization" class="filter-select">
+                <option value="">All Specializations</option>
+                {% for spec in specializations %}
+                <option value="{{ spec }}" {% if specialization == spec %}selected{% endif %}>{{ spec }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-filter">
+                <i class="fas fa-filter"></i> Apply Filter
+            </button>
+        </form>
+    </div>
+
+    <div class="mentors-grid">
+        {% for mentor in mentors %}
+        <div class="mentor-card" style="--i: {{ forloop.counter }}">
+            <div class="mentor-header">
+                <div class="mentor-info-section">
+                    <img src="{% if mentor.profile_picture %}{{ mentor.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={{ mentor.full_name|default:mentor.user.username }}&background=9d4edd&color=fff{% endif %}" 
+                         alt="{{ mentor.full_name }}" 
+                         class="mentor-image">
+                    <div class="mentor-info">
+                        <h3>{{ mentor.full_name }}</h3>
+                        <p>{{ mentor.current_role }}</p>
+                        <span class="status-badge status-{{ mentor.verification_status }}">
+                            {{ mentor.verification_status|title }}
+                        </span>
+                    </div>
+                </div>
+                <button type="button" class="remove-btn" data-id="{{ mentor.id }}">
+                    <i class="fas fa-user-times"></i> Remove
+                </button>
+            </div>
+
+            <div class="mentor-details">
+                <div class="detail-item">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">{{ mentor.user.email }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone:</div>
+                    <div class="detail-value">{{ mentor.phone }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Qualification:</div>
+                    <div class="detail-value">{{ mentor.highest_qualification }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">University:</div>
+                    <div class="detail-value">{{ mentor.university }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Specialization:</div>
+                    <div class="detail-value">{{ mentor.specialization }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Experience:</div>
+                    <div class="detail-value">{{ mentor.experience_years }} years</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Teaching Branch:</div>
+                    <div class="detail-value">{{ mentor.teaching_branch }}</div>
+                </div>
+                {% if mentor.expertise_areas %}
+                <div class="detail-item">
+                    <div class="detail-label">Expertise:</div>
+                    <div class="detail-value">{{ mentor.expertise_areas }}</div>
+                </div>
+                {% endif %}
+                {% if mentor.linkedin %}
+                <div class="detail-item">
+                    <div class="detail-label">LinkedIn:</div>
+                    <div class="detail-value">
+                        <a href="{{ mentor.linkedin }}" target="_blank">
+                            <i class="fab fa-linkedin"></i> View Profile
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="detail-item">
+                    <div class="detail-label">Joined:</div>
+                    <div class="detail-value">{{ mentor.user.date_joined|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-user-slash"></i>
+            <p>No mentors found matching the criteria.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers for remove buttons
+    var removeButtons = document.querySelectorAll('.remove-btn');
+    removeButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get mentor ID and action URL
+            var mentorId = this.getAttribute('data-id');
+            var actionUrl = `{% url 'remove_mentor' 0 %}`.replace('0', mentorId);
+            
+            // Use fetch API to delete the mentor
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.reload();
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

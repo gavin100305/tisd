@@ -1,0 +1,791 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root {
+    --primary: #8B5CF6;
+    --primary-hover: #7C3AED;
+    --primary-light: rgba(139, 92, 246, 0.2);
+    --text-light: #F3F4F6;
+    --text-secondary: #9CA3AF;
+    --card-bg: rgba(17, 17, 17, 0.8);
+    --card-border: rgba(139, 92, 246, 0.2);
+    --card-shadow: rgba(0, 0, 0, 0.5);
+    --bg-dark: #000000;
+    --bg-darker: #000000;
+}
+
+body {
+    background-color: var(--bg-darker);
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Background Elements - Simplified to just black */
+.bg-elements {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: black;
+}
+
+/* Removed all gradient elements */
+
+.static-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    z-index: -1;
+    background-image: radial-gradient(#a855f7 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.dashboard-container {
+    padding: 2.5rem 0;
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 1.8rem 0;
+    position: relative;
+}
+
+.welcome-section::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    border-radius: 2px;
+}
+
+.welcome-section h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin-bottom: 1.2rem;
+    color: white;
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.welcome-section h1 span {
+    color: var(--primary);
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(135deg, #a855f7, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.welcome-section h1 span::after {
+    content: "";
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background-color: var(--primary-light);
+    z-index: -1;
+    border-radius: 4px;
+}
+
+.welcome-section p {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Cards Grid - Updated to 3 in a row */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+/* Card styling similar to profile section */
+.dashboard-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.8rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px var(--card-shadow);
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+}
+
+.dashboard-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #a855f7, #8b5cf6);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.dashboard-card:hover::before {
+    opacity: 1;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-12px);
+    border-color: var(--primary);
+    box-shadow: 0 15px 50px rgba(139, 92, 246, 0.3);
+    background: rgba(20, 20, 20, 0.9);
+}
+
+.card-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.4));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 2;
+    transition: all 0.4s ease;
+    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
+}
+
+.dashboard-card:hover .card-icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+}
+
+.card-icon-wrapper i {
+    font-size: 2rem;
+    color: var(--primary);
+    transition: color 0.4s ease;
+}
+
+.dashboard-card:hover .card-icon-wrapper i {
+    color: white;
+}
+
+.dashboard-card h3 {
+    color: white;
+    margin-bottom: 0.8rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    transition: color 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-card:hover h3 {
+    color: var(--primary);
+}
+
+.dashboard-card .badge {
+    background-color: #dc3545;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    border-radius: 50rem;
+}
+
+.dashboard-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    flex-grow: 1;
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-card small {
+    color: rgba(156, 163, 175, 0.7);
+    display: block;
+    margin-bottom: 0.3rem;
+    position: relative;
+    z-index: 2;
+}
+
+.card-action {
+    background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.6rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.card-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.7s ease;
+}
+
+.card-action:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    color: white;
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
+}
+
+.card-action:hover::before {
+    left: 100%;
+}
+
+.card-action i {
+    margin-left: 10px;
+    font-size: 1rem;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.card-action:hover i {
+    transform: translateX(6px);
+}
+
+/* Profile Section */
+.profile-section {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 15px 35px var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #a855f7, #8b5cf6);
+}
+
+.profile-section h2 {
+    color: var(--primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    padding-bottom: 1rem;
+    position: relative;
+}
+
+.profile-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #a855f7, #8b5cf6);
+    border-radius: 3px;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.profile-item {
+    margin-bottom: 0.5rem;
+    transition: transform 0.3s ease;
+    padding: 0.8rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: rgba(20, 20, 20, 0.5);
+}
+
+.profile-item:hover {
+    transform: translateY(-5px);
+    background: rgba(139, 92, 246, 0.05);
+    border-color: rgba(139, 92, 246, 0.1);
+}
+
+.profile-label {
+    color: var(--primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.profile-value {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Alerts */
+.alert-messages {
+    margin-bottom: 3rem;
+}
+
+.alert {
+    background-color: var(--card-bg);
+    border: 1px solid;
+    border-radius: 12px;
+    padding: 1.2rem 1.8rem;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+}
+
+.alert::before {
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    margin-right: 15px;
+    font-size: 1.3rem;
+}
+
+.alert-success {
+    border-color: rgba(25, 135, 84, 0.3);
+    color: #5ae6a8;
+}
+
+.alert-success::before {
+    content: '\f058';
+    color: #5ae6a8;
+}
+
+.alert-danger {
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
+}
+
+.alert-danger::before {
+    content: '\f057';
+    color: #ff6b6b;
+}
+
+.alert-info {
+    border-color: rgba(13, 202, 240, 0.3);
+    color: #6edff6;
+}
+
+.alert-info::before {
+    content: '\f05a';
+    color: #6edff6;
+}
+
+/* Project Assessments Card */
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--card-shadow);
+    transition: all 0.4s ease;
+    height: 100%;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary);
+    box-shadow: 0 15px 40px rgba(139, 92, 246, 0.25);
+    background: rgba(20, 20, 20, 0.9);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.avatar-sm {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+}
+
+.card:hover .avatar-sm {
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+}
+
+.avatar-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    transition: color 0.4s ease;
+}
+
+.card:hover .avatar-title {
+    color: white;
+}
+
+.font-size-16 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: white;
+}
+
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+    margin-top: 1rem;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+}
+
+/* Ripple animation */
+@keyframes ripple {
+    to {
+        transform: translate(-50%, -50%) scale(15);
+        opacity: 0;
+    }
+}
+
+.ripple {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+    z-index: 1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .welcome-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .dashboard-card {
+        padding: 1.6rem;
+        min-height: 230px;
+    }
+    
+    .card-icon-wrapper {
+        width: 65px;
+        height: 65px;
+    }
+    
+    .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .welcome-section h1 {
+        font-size: 2rem;
+    }
+    
+    .welcome-section p {
+        font-size: 1rem;
+    }
+    
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-card {
+        padding: 1.5rem;
+        min-height: 210px;
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Add smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Entry Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered card animations */
+.cards-grid .dashboard-card {
+    opacity: 0;
+    animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--index) * 0.1s);
+}
+
+/* Dark overlay for better contrast */
+.dark-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 5, 5, 0.7);
+    z-index: 1;
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-elements">
+    <!-- Removed gradient elements, keeping only the black background -->
+    <div class="static-pattern"></div>
+</div>
+
+<div class="container dashboard-container">
+    <!-- Welcome Section -->
+    <div class="welcome-section animate-fade-in">
+        <h1>Welcome back, <span>{{ student.full_name }}</span></h1>
+        <p>Access your learning resources, connect with mentors, and track your project progress</p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="alert-messages animate-slide-up">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Actions Grid - Updated to 3 columns -->
+    <div class="cards-grid">
+        <a href="{% url 'list_mentors' %}" class="dashboard-card" style="--index: 0;">
+            <div class="card-icon-wrapper">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3>Find Mentors</h3>
+            <p>Browse and connect with mentors who can guide you in your learning journey</p>
+            <span class="card-action">Explore <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="{% url 'my_connections' %}" class="dashboard-card" style="--index: 1;">
+            <div class="card-icon-wrapper">
+                <i class="fas fa-user-friends"></i>
+            </div>
+            <h3>My Connections</h3>
+            <p>View and manage your current mentor connections and messages</p>
+            <span class="card-action">View <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="{% url 'my_projects' %}" class="dashboard-card" style="--index: 2;">
+            <div class="card-icon-wrapper">
+                <i class="fas fa-project-diagram"></i>
+            </div>
+            <h3>My Projects</h3>
+            <p>Manage your current projects and track your progress with mentors</p>
+            <span class="card-action">Manage <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="{% url 'view_collaborators' %}" class="dashboard-card" style="--index: 3;">
+            <div class="card-icon-wrapper">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>Browse Collaborators</h3>
+            <p>Find and connect with collaborators who can contribute to your projects</p>
+            <span class="card-action">Browse <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="{% url 'view_collaboration_requests' %}" class="dashboard-card" style="--index: 4;">
+            <div class="card-icon-wrapper">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <h3>Collaboration Requests {% if pending_requests_count %}<span class="badge bg-danger">{{ pending_requests_count }}</span>{% endif %}</h3>
+            <p>View and manage collaboration requests for your projects</p>
+            <div class="mt-2">
+                <small class="text-gray-500">Individual Requests: {{ individual_requests_count }}</small><br>
+                <small class="text-gray-500">Group Requests: {{ group_requests_count }}</small>
+            </div>
+            <span class="card-action">View Requests <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="{% url 'student_view_assessments' %}" class="dashboard-card" style="--index: 5;">
+            <div class="card-icon-wrapper">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <h3>Project Assessments</h3>
+            <p>View and track your project assessments from your college</p>
+            <span class="card-action">View Assessments <i class="fas fa-arrow-right"></i></span>
+        </a>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-section animate-slide-up">
+        <h2>Your Profile</h2>
+        <div class="profile-grid">
+            <div class="profile-item">
+                <div class="profile-label">Full Name</div>
+                <div class="profile-value">{{ student.full_name }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Roll Number</div>
+                <div class="profile-value">{{ student.roll_number }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Branch</div>
+                <div class="profile-value">{{ student.branch }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Semester</div>
+                <div class="profile-value">{{ student.semester }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Section</div>
+                <div class="profile-value">{{ student.section }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Admission Year</div>
+                <div class="profile-value">{{ student.admission_year }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Email</div>
+                <div class="profile-value">{{ student.user.email }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Phone</div>
+                <div class="profile-value">{{ student.phone }}</div>
+            </div>
+            <div class="profile-item">
+                <div class="profile-label">Date of Birth</div>
+                <div class="profile-value">{{ student.dob }}</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Add ripple effect to cards
+    document.querySelectorAll('.dashboard-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            if (card.querySelectorAll('.ripple').length > 0) {
+                card.querySelector('.ripple').remove();
+            }
+            
+            card.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 700);
+        });
+    });
+
+    // Initialize animations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set animation delays for cards
+        const cards = document.querySelectorAll('.cards-grid .dashboard-card');
+        cards.forEach((card, index) => {
+            card.style.setProperty('--index', index);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

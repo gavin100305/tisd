@@ -1,0 +1,516 @@
+{% extends '../base.html' %}
+{% load static %}
+
+{% block title %}My Groups | TISD{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Core Styles */
+    .container {
+        padding: 2.5rem 0;
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Background Elements */
+    body {
+        background-color: #000000;
+        color: white;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Background Elements */
+    .bg-elements {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+    }
+
+    .static-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.05;
+        z-index: -1;
+        background-image: radial-gradient(#666666 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+
+    /* Header Section */
+    .header-section {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: rgba(15, 15, 15, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(157, 78, 221, 0.15);
+        animation: fadeIn 0.8s ease-out;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-section h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0;
+    }
+
+    .create-btn {
+        background: linear-gradient(90deg, #a855f7, #8b5cf6);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+    }
+
+    .create-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        color: white;
+    }
+
+    /* Alert Messages */
+    .alert {
+        background: rgba(15, 12, 24, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid;
+        border-radius: 12px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    .alert::before {
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 1.3rem;
+    }
+
+    .alert-success {
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.1);
+        color: #5ae6a8;
+    }
+
+    .alert-success::before {
+        content: '\f058';
+        color: #5ae6a8;
+    }
+
+    .alert-danger {
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.1);
+        color: #ff6b6b;
+    }
+
+    .alert-danger::before {
+        content: '\f057';
+        color: #ff6b6b;
+    }
+
+    /* Invitation Section */
+    .card-section {
+        background: rgba(15, 15, 15, 0.8);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(157, 78, 221, 0.15);
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+        background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Group Grid */
+    .group-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    /* Group Card */
+    .group-card {
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .group-card:hover {
+        border-color: rgba(157, 78, 221, 0.4);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(157, 78, 221, 0.2);
+    }
+
+    .group-card a {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+    }
+
+    .group-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .group-info {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    .group-description {
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    /* Invitation Cards */
+    .invitation-card {
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+        transition: all 0.3s ease;
+    }
+
+    .invitation-card:hover {
+        border-color: rgba(157, 78, 221, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 50px rgba(157, 78, 221, 0.2);
+    }
+
+    .invitation-info h3 {
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .invitation-info p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .invitation-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    /* Button Styles */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-accept {
+        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-accept:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-reject {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-reject:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.15);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 0;
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .empty-state .icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h2 {
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Staggered Animation for Cards */
+    .group-card:nth-child(1), .invitation-card:nth-child(1) { animation-delay: 0.1s; }
+    .group-card:nth-child(2), .invitation-card:nth-child(2) { animation-delay: 0.2s; }
+    .group-card:nth-child(3), .invitation-card:nth-child(3) { animation-delay: 0.3s; }
+    .group-card:nth-child(4), .invitation-card:nth-child(4) { animation-delay: 0.4s; }
+    .group-card:nth-child(5), .invitation-card:nth-child(5) { animation-delay: 0.5s; }
+    .group-card:nth-child(6), .invitation-card:nth-child(6) { animation-delay: 0.6s; }
+
+    /* Responsive Design */
+    @media (min-width: 768px) {
+        .group-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .group-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1.5rem;
+        }
+
+        .header-section {
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: center;
+        }
+
+        .invitation-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .invitation-actions {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-elements">
+    <div class="static-pattern"></div>
+</div>
+
+<div class="container">
+    <div class="header-section">
+        <h1>My Groups</h1>
+        <a href="{% url 'create_group' %}" class="create-btn">
+            <i class="fas fa-plus"></i>
+            Create Group
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if pending_invites %}
+    <div class="card-section">
+        <h2 class="section-title">Pending Invitations</h2>
+        {% for invite in pending_invites %}
+        <div class="invitation-card">
+            <div class="invitation-info">
+                <h3>{{ invite.group.name }}</h3>
+                <p>Led by {{ invite.group.leader.full_name }}</p>
+            </div>
+            <div class="invitation-actions">
+                <form method="post" action="{% url 'handle_invitation' invite.id %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="accept">
+                    <button type="submit" class="btn btn-accept">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                </form>
+                <form method="post" action="{% url 'handle_invitation' invite.id %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="btn btn-reject">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if led_groups %}
+    <div class="card-section">
+        <h2 class="section-title">Groups I Lead</h2>
+        <div class="group-grid">
+            {% for group in led_groups %}
+            <div class="group-card">
+                <a href="{% url 'group_detail' group.id %}" class="block">
+                    <h3 class="group-name">{{ group.name }}</h3>
+                    <p class="group-info">{{ group.members.count }} member{{ group.members.count|pluralize }}</p>
+                    {% if group.description %}
+                    <p class="group-description">{{ group.description|truncatewords:30 }}</p>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if member_groups %}
+    <div class="card-section">
+        <h2 class="section-title">Groups I'm In</h2>
+        <div class="group-grid">
+            {% for group in member_groups %}
+            <div class="group-card">
+                <a href="{% url 'group_detail' group.id %}" class="block">
+                    <h3 class="group-name">{{ group.name }}</h3>
+                    <p class="group-info">Led by {{ group.leader.full_name }}</p>
+                    {% if group.description %}
+                    <p class="group-description">{{ group.description|truncatewords:30 }}</p>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not led_groups and not member_groups and not pending_invites %}
+    <div class="empty-state">
+        <div class="icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <h2>No Groups Yet</h2>
+        <p>Create a group or wait for invitations from other students.</p>
+        <a href="{% url 'create_group' %}" class="create-btn">
+            <i class="fas fa-plus"></i>
+            Create Your First Group
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Add hover effect animations for button interactions
+    document.querySelectorAll('.btn, .create-btn').forEach(btn => {
+        btn.addEventListener('mouseover', function() {
+            this.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        });
+    });
+
+    // Add subtle entrance animation for page load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            document.querySelectorAll('.group-card, .invitation-card').forEach((card, index) => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            });
+        }, 100);
+    });
+</script>
+{% endblock %}

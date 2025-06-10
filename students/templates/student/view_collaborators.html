@@ -1,0 +1,495 @@
+{% extends '../base.html' %}
+
+{% block title %}View Collaborators{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #8B5CF6;
+        --primary-hover: #7C3AED;
+        --primary-light: rgba(139, 92, 246, 0.2);
+        --text-light: #F3F4F6;
+        --text-secondary: #D1D5DB;
+        --card-bg: rgba(15, 12, 24, 0.7);
+        --card-border: rgba(157, 78, 221, 0.3);
+        --card-shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.1));
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+    }
+
+    .header-section:hover {
+        border-color: var(--primary);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    }
+
+    .header-title {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #8B5CF6, #A855F7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+
+    .header-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        border-left: 3px solid var(--primary);
+        padding-left: 1rem;
+        margin-top: 1rem;
+    }
+
+    .search-section {
+        background: linear-gradient(135deg, rgba(15, 12, 24, 0.7), rgba(30, 24, 48, 0.7));
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-section:hover {
+        border-color: var(--primary);
+    }
+
+    .search-form {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .search-input {
+        flex: 1;
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    .search-btn {
+        background: linear-gradient(135deg, var(--primary), #A855F7);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+        background: linear-gradient(135deg, #7C3AED, #9333EA);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .collaborator-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .collaborator-card {
+        background: linear-gradient(135deg, rgba(15, 12, 24, 0.8), rgba(30, 24, 48, 0.8));
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .collaborator-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary), #A855F7);
+        opacity: 0.7;
+    }
+
+    .collaborator-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.15);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .profile-image {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary);
+        padding: 2px;
+        background: rgba(139, 92, 246, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .collaborator-card:hover .profile-image {
+        transform: scale(1.05);
+        border-color: #A855F7;
+    }
+
+    .profile-info h3 {
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .profile-info p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .detail-item:hover {
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .detail-item i {
+        color: var(--primary);
+        width: 20px;
+        text-align: center;
+    }
+
+    .detail-item p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .social-link {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--primary);
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .social-link.github {
+        background: rgba(255, 211, 42, 0.1);
+        color: #FFD32A;
+        border: 1px solid rgba(255, 211, 42, 0.2);
+    }
+
+    .social-link.github:hover {
+        background: #FFD32A;
+        color: #000000;
+        border-color: #FFD32A;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 211, 42, 0.3);
+    }
+
+    .social-link.linkedin {
+        background: rgba(10, 102, 194, 0.1);
+        color: #0A66C2;
+        border: 1px solid rgba(10, 102, 194, 0.2);
+    }
+
+    .social-link.linkedin:hover {
+        background: #0A66C2;
+        color: white;
+        border-color: #0A66C2;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(10, 102, 194, 0.3);
+    }
+
+    .social-link.portfolio {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .social-link.portfolio:hover {
+        background: #EF4444;
+        color: white;
+        border-color: #EF4444;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, rgba(15, 12, 24, 0.8), rgba(30, 24, 48, 0.8));
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+    }
+
+    .empty-state h3 {
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #8B5CF6, #A855F7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .pagination {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .pagination a:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .search-form {
+            flex-direction: column;
+        }
+
+        .collaborator-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .social-links {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h2 class="header-title">Registered Collaborators</h2>
+        <p class="header-subtitle">Browse and connect with collaborators who can help with your projects</p>
+    </div>
+
+    <div class="search-section">
+        <form method="GET" action="{% url 'view_collaborators' %}" class="search-form">
+            <input type="text" name="search" value="{{ search_query }}" class="search-input"
+                placeholder="Search by name, expertise, company, or email">
+            <button type="submit" class="search-btn">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd" />
+                </svg>
+                Search
+            </button>
+        </form>
+    </div>
+
+    <div class="collaborator-grid">
+        {% for collaborator in collaborators %}
+        <div class="collaborator-card">
+            <div class="profile-header">
+                <div class="profile-image-container">
+                    {% if collaborator.collaborator_profile.profile_picture %}
+                    <img src="{{ collaborator.collaborator_profile.profile_picture.url }}"
+                        alt="{{ collaborator.collaborator_profile.full_name }}" class="profile-image">
+                    {% else %}
+                    <div class="profile-image" style="display: flex; align-items: center; justify-content: center; background: var(--primary-light);">
+                        <span style="color: var(--primary); font-size: 1.5rem; font-weight: 600;">
+                            {{ collaborator.username|make_list|first|upper }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <h3>{{ collaborator.collaborator_profile.full_name|default:collaborator.username }}</h3>
+                    <p>@{{ collaborator.username }}</p>
+                </div>
+            </div>
+
+            {% if collaborator.collaborator_profile.position or collaborator.collaborator_profile.company %}
+            <div class="detail-item">
+                <i class="fas fa-briefcase"></i>
+                <p>
+                    {% if collaborator.collaborator_profile.position %}
+                    {{ collaborator.collaborator_profile.position }}
+                    {% if collaborator.collaborator_profile.company %}at{% endif %}
+                    {% endif %}
+                    {% if collaborator.collaborator_profile.company %}
+                    {{ collaborator.collaborator_profile.company }}
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+            {% if collaborator.collaborator_profile.expertise %}
+            <div class="detail-item">
+                <i class="fas fa-star"></i>
+                <p>{{ collaborator.collaborator_profile.expertise }}</p>
+            </div>
+            {% endif %}
+
+            {% if collaborator.collaborator_profile.bio %}
+            <div class="detail-item">
+                <i class="fas fa-info-circle"></i>
+                <p>{{ collaborator.collaborator_profile.bio|truncatechars:100 }}</p>
+            </div>
+            {% endif %}
+
+            <div class="detail-item">
+                <i class="fas fa-envelope"></i>
+                <p>{{ collaborator.email }}</p>
+            </div>
+
+            <div class="social-links">
+                {% if collaborator.collaborator_profile.github_url %}
+                <a href="{{ collaborator.collaborator_profile.github_url }}" target="_blank" rel="noopener noreferrer"
+                    class="social-link github">
+                    <i class="fab fa-github"></i>
+                    GitHub
+                </a>
+                {% endif %}
+
+                {% if collaborator.collaborator_profile.linkedin_url %}
+                <a href="{{ collaborator.collaborator_profile.linkedin_url }}" target="_blank" rel="noopener noreferrer"
+                    class="social-link linkedin">
+                    <i class="fab fa-linkedin"></i>
+                    LinkedIn
+                </a>
+                {% endif %}
+
+                {% if collaborator.collaborator_profile.portfolio_url %}
+                <a href="{{ collaborator.collaborator_profile.portfolio_url }}" target="_blank" rel="noopener noreferrer"
+                    class="social-link portfolio">
+                    <i class="fas fa-globe"></i>
+                    Portfolio
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <h3>No collaborators found</h3>
+            <p>
+                {% if search_query %}
+                No collaborators match your search criteria.
+                {% else %}
+                There are no registered collaborators yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if collaborators.has_other_pages %}
+    <div class="pagination">
+        {% if collaborators.has_previous %}
+        <a href="?page={{ collaborators.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for i in collaborators.paginator.page_range %}
+        {% if collaborators.number == i %}
+        <span class="current">{{ i }}</span>
+        {% elif i > collaborators.number|add:'-3' and i < collaborators.number|add:'3' %}
+        <a href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ i }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if collaborators.has_next %}
+        <a href="?page={{ collaborators.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

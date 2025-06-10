@@ -1,0 +1,647 @@
+{% extends '../base.html' %}
+{% load static %}
+
+{% block title %}My Mentor Connections{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Core Styles */
+    .container {
+        padding: 2.5rem 0;
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Background */
+    body {
+        background-color: #000000;
+        color: #F3F4F6;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Remove background elements for consistency with project page */
+    .bg-elements {
+        display: none;
+    }
+
+    /* Header Section */
+    .header-section {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: rgba(15, 15, 15, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(157, 78, 221, 0.15);
+    }
+
+    .header-section h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #a855f7, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    /* Alert Messages */
+    .alert {
+        background: rgba(15, 12, 24, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid;
+        border-radius: 12px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 1rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert::before {
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 1.3rem;
+    }
+
+    .alert-success {
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .alert-success::before {
+        content: '\f058';
+        color: #5ae6a8;
+    }
+
+    .alert-danger {
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .alert-danger::before {
+        content: '\f057';
+        color: #ff6b6b;
+    }
+
+    .alert-info {
+        border-color: rgba(59, 130, 246, 0.3);
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .alert-info::before {
+        content: '\f05a';
+        color: #60a5fa;
+    }
+
+    /* Mentor Cards */
+    .mentor-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+
+    .mentor-card {
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mentor-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #a855f7, #8b5cf6);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+
+    .mentor-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(157, 78, 221, 0.4);
+        box-shadow: 0 15px 50px rgba(31, 38, 135, 0.2);
+    }
+
+    .mentor-card:hover::after {
+        transform: scaleX(1);
+    }
+
+    .mentor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .mentor-image-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid rgba(157, 78, 221, 0.5);
+        transition: all 0.4s ease;
+    }
+
+    .mentor-card:hover .mentor-image-wrapper {
+        transform: scale(1.05);
+        border-color: #a855f7;
+    }
+
+    .mentor-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .mentor-card:hover .mentor-image {
+        transform: scale(1.1);
+    }
+
+    .mentor-info {
+        flex: 1;
+        padding-left: 1rem;
+    }
+
+    .mentor-info h3 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .mentor-info p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+
+    .status-pending {
+        background: rgba(234, 179, 8, 0.1);
+        color: #eab308;
+        border: 1px solid rgba(234, 179, 8, 0.2);
+    }
+
+    .status-accepted {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .mentor-details {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+        line-height: 1.6;
+        animation: slideDown 0.4s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mentor-details p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .mentor-details p:last-child {
+        margin-bottom: 0;
+    }
+
+    .mentor-details p strong {
+        color: #9d4edd;
+        font-weight: 500;
+        margin-right: 0.5rem;
+    }
+
+    .contact-info {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        padding: 1.2rem;
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .contact-info p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .contact-info p:last-child {
+        margin-bottom: 0;
+    }
+
+    .contact-info a {
+        color: #9d4edd;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .contact-info a:hover {
+        color: #a855f7;
+        text-decoration: underline;
+    }
+
+    .connection-date {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        text-align: right;
+        margin-top: 1.5rem;
+        font-style: italic;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-message {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-message:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .btn-schedule {
+        background: rgba(168, 85, 247, 0.1);
+        color: #a855f7;
+        border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .btn-schedule:hover {
+        background: rgba(168, 85, 247, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .btn-cancel {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-cancel:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(15, 12, 24, 0.7);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(157, 78, 221, 0.2);
+        border-radius: 20px;
+        margin-top: 2rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.3);
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h2 {
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Find Mentors Button */
+    .btn-find {
+        background: linear-gradient(90deg, #a855f7 0%, #8b5cf6 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-find:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
+        background: linear-gradient(90deg, #9d4edd 0%, #7c3aed 100%);
+        color: white;
+    }
+
+    /* Section Toggle Animation */
+    .section-toggle {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        color: #9d4edd;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .section-toggle:hover {
+        background: rgba(157, 78, 221, 0.05);
+    }
+
+    .section-toggle i {
+        transition: transform 0.3s ease;
+    }
+
+    .section-toggle.collapsed i {
+        transform: rotate(-90deg);
+    }
+
+    .collapsible-content {
+        transition: all 0.4s ease;
+        max-height: 500px;
+        overflow: hidden;
+    }
+
+    .collapsible-content.collapsed {
+        max-height: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1.5rem;
+        }
+
+        .header-section {
+            padding: 1.5rem;
+        }
+
+        .header-section h1 {
+            font-size: 2rem;
+        }
+
+        .mentor-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .mentor-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .mentor-info {
+            padding-left: 0;
+            padding-top: 1rem;
+            text-align: center;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Animation for cards */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animated-item {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    /* Button animation */
+    .btn-find {
+        background-size: 200% 100%;
+        animation: shimmer 3s infinite linear;
+        background-image: linear-gradient(90deg, #a855f7 0%, #8b5cf6 50%, #a855f7 100%);
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <div class="header-content" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>My Mentor Connections</h1>
+            <a href="{% url 'list_mentors' %}" class="btn-find">
+                <i class="fas fa-search"></i>
+                Find New Mentors
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages" style="margin-bottom: 1.5rem;">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="mentor-grid">
+        {% for connection in connections %}
+        <div class="mentor-card animated-item" data-index="{{ forloop.counter0 }}">
+            <div class="mentor-header">
+                <div class="mentor-image-wrapper">
+                    <img src="{% if connection.mentor.profile_picture %}{{ connection.mentor.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={{ connection.mentor.full_name|default:connection.mentor.user.username }}&background=9d4edd&color=fff{% endif %}" 
+                        alt="{{ connection.mentor.full_name }}" 
+                        class="mentor-image">
+                </div>
+                <div class="mentor-info">
+                    <h3>{{ connection.mentor.full_name }}</h3>
+                    <p>{{ connection.mentor.current_role }}</p>
+                    <p>{{ connection.mentor.specialization }}</p>
+                    <span class="status-badge status-{{ connection.status }}">
+                        {{ connection.status|title }}
+                    </span>
+                </div>
+            </div>
+
+            {% if connection.status == 'accepted' %}
+            <div class="section-toggle" onclick="toggleSection(this)">
+                <span>Mentor Details</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="mentor-details collapsible-content">
+                <p><strong>Experience:</strong> {{ connection.mentor.experience_years }} years</p>
+                <p><strong>Teaching Branch:</strong> {{ connection.mentor.teaching_branch }}</p>
+                <p><strong>Qualification:</strong> {{ connection.mentor.highest_qualification }}</p>
+                <p><strong>University:</strong> {{ connection.mentor.university }}</p>
+                {% if connection.mentor.expertise_areas %}
+                <p><strong>Areas of Expertise:</strong> {{ connection.mentor.expertise_areas }}</p>
+                {% endif %}
+                {% if connection.mentor.bio %}
+                <p><strong>Bio:</strong> {{ connection.mentor.bio }}</p>
+                {% endif %}
+            </div>
+
+            <div class="section-toggle" onclick="toggleSection(this)">
+                <span>Contact Information</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="contact-info collapsible-content">
+                <p><i class="fas fa-envelope"></i> <a href="mailto:{{ connection.mentor.user.email }}">{{ connection.mentor.user.email }}</a></p>
+                {% if connection.mentor.phone %}
+                <p><i class="fas fa-phone"></i> {{ connection.mentor.phone }}</p>
+                {% endif %}
+                {% if connection.mentor.linkedin %}
+                <p><i class="fab fa-linkedin"></i> <a href="{{ connection.mentor.linkedin }}" target="_blank">View Profile</a></p>
+                {% endif %}
+                {% if connection.mentor.website %}
+                <p><i class="fas fa-globe"></i> <a href="{{ connection.mentor.website }}" target="_blank">Visit Website</a></p>
+                {% endif %}
+            </div>
+
+            <div class="action-buttons">
+                {% comment %}Removed the schedule meeting link and cancel connection form that were causing errors{% endcomment %}
+            </div>
+
+            <div class="connection-date">
+                Connected since: {{ connection.updated_at|date:"F j, Y" }}
+            </div>
+            {% else %}
+            <div class="mentor-details">
+                <p><strong>Message:</strong> {{ connection.message }}</p>
+                <p class="connection-date">Requested on: {{ connection.created_at|date:"F j, Y" }}</p>
+            </div>
+            
+            {% if connection.status == 'pending' %}
+            <div class="action-buttons">
+                {% comment %}Removed the cancel request form that was causing the error{% endcomment %}
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-user-friends"></i>
+            <h2>No Mentor Connections Yet</h2>
+            <p>Start by finding and connecting with mentors who can guide you in your learning journey.</p>
+            <a href="{% url 'list_mentors' %}" class="btn-find">
+                <i class="fas fa-search"></i> Find Mentors
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function toggleSection(element) {
+        element.classList.toggle('collapsed');
+        var content = element.nextElementSibling;
+        content.classList.toggle('collapsed');
+    }
+
+    // Add animation delays to cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.animated-item');
+        cards.forEach((card) => {
+            const index = card.getAttribute('data-index');
+            card.style.animationDelay = `${index * 100}ms`;
+        });
+    });
+</script>
+{% endblock %}

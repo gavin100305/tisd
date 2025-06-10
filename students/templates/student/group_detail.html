@@ -1,0 +1,1053 @@
+{% extends '../base.html' %}
+{% load static %}
+
+{% block title %}{{ group.name }} | TISD{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Back Navigation -->
+    <div class="back-navigation">
+        <a href="{% url 'my_groups' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Groups
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="content-section {% if message.tags == 'success' %}border-green-500{% elif message.tags == 'error' %}border-red-500{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Main Content Grid -->
+    <div class="main-content-grid">
+        <!-- Left Column - Group Details -->
+        <div class="project-main-content">
+            <!-- Group Header -->
+            <div class="project-header">
+                <h1 class="project-title">{{ group.name }}</h1>
+                <div class="project-meta">
+                    <div class="meta-item">
+                        <span>Created on {{ group.created_at|date:"F j, Y" }}</span>
+                    </div>
+                    <div class="status-badge active">
+                        Active Group
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Navigation Tabs -->
+            <div class="project-tabs">
+                <button class="tab-button active" data-tab="overview">Overview</button>
+                <button class="tab-button" data-tab="projects">Projects</button>
+                <button class="tab-button" data-tab="meetings">Meetings</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Overview Tab (Active by default) -->
+                <div class="tab-pane active" id="overview">
+                    <!-- Group Description -->
+                    <div class="content-section">
+                        <h2 class="section-title">Group Description</h2>
+                        <div class="section-content">
+                            {% if group.description %}
+                                {{ group.description|linebreaks }}
+                            {% else %}
+                                <p class="empty-state">No description provided for this group.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Members Section -->
+                    <div class="content-section">
+                        <h2 class="section-title">Group Members</h2>
+                        <div class="section-content">
+                            <div class="member-list">
+                                <!-- Leader -->
+                                <div class="team-member leader">
+                                    <div class="team-member-info">
+                                        <h3>{{ group.leader.full_name }}</h3>
+                                        <p>Leader</p>
+                                        <p class="member-email">{{ group.leader.email }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Members -->
+                                {% for membership in members %}
+                                    {% if membership.student != group.leader %}
+                                        <div class="team-member">
+                                            <div class="team-member-info">
+                                                <h3>{{ membership.student.full_name }}</h3>
+                                                <p>Member</p>
+                                                <p class="member-email">{{ membership.student.email }}</p>
+                                            </div>
+                                            {% if is_leader %}
+                                                <form method="post" action="{% url 'remove_member' group.id membership.student.id %}" class="inline-form">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                                            onclick="return confirm('Are you sure you want to remove this member?')">
+                                                        <i class="fas fa-user-minus"></i> Remove
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Pending Members -->
+                                {% if pending_members %}
+                                    <div class="pending-members">
+                                        <h3 class="pending-title">Pending Invitations</h3>
+                                        {% for membership in pending_members %}
+                                            <div class="team-member pending">
+                                                <div class="team-member-info">
+                                                    <h3>{{ membership.student.full_name }}</h3>
+                                                    <p>Pending</p>
+                                                    <p class="member-email">{{ membership.student.email }}</p>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if is_leader %}
+                                <div class="invite-member">
+                                    <button onclick="document.getElementById('inviteModal').classList.add('show')" 
+                                            class="btn btn-primary">
+                                        <i class="fas fa-user-plus"></i> Invite Member
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Tab -->
+                <div class="tab-pane" id="projects">
+                    <div class="content-section">
+                        <h2 class="section-title">Group Projects</h2>
+                        <div class="section-content">
+                            {% if projects %}
+                                <div class="projects-grid">
+                                    {% for project in projects %}
+                                        <div class="project-card">
+                                            <div class="project-card-header">
+                                                <h3 class="project-card-title">
+                                                    <a href="{% url 'group_project_detail' group.id project.id %}">
+                                                        {{ project.title }}
+                                                    </a>
+                                                </h3>
+                                                <div class="project-card-status {{ project.status }}">
+                                                    {{ project.get_status_display }}
+                                                </div>
+                                            </div>
+                                            <p class="project-card-description">
+                                                {{ project.description|truncatewords:20 }}
+                                            </p>
+                                            <div class="project-card-footer">
+                                                <div class="project-card-meta">
+                                                    {% if project.mentor %}
+                                                        <span><i class="fas fa-user-tie"></i> {{ project.mentor.full_name }}</span>
+                                                    {% endif %}
+                                                    <span><i class="fas fa-calendar"></i> {{ project.created_at|date:"M d, Y" }}</span>
+                                                </div>
+                                                
+                                                {% if is_leader %}
+                                                    <div class="project-card-actions">
+                                                        <form method="post" action="{% url 'toggle_project_collaboration' project.id %}" class="inline-form">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-sm {% if project.is_open_for_collaboration %}btn-warning{% else %}btn-success{% endif %}">
+                                                                {% if project.is_open_for_collaboration %}
+                                                                    <i class="fas fa-lock"></i>
+                                                                {% else %}
+                                                                    <i class="fas fa-lock-open"></i>
+                                                                {% endif %}
+                                                            </button>
+                                                        </form>
+                                                        <a href="{% url 'edit_group_project' group.id project.id %}" class="btn btn-primary btn-sm">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <form method="post" action="{% url 'delete_group_project' group.id project.id %}" class="inline-form" 
+                                                              onsubmit="return confirm('Are you sure you want to delete this project?');">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-project-diagram"></i>
+                                    <h3>No Projects Yet</h3>
+                                    <p>Start by adding your first group project</p>
+                                    <a href="{% url 'add_group_project' group.id %}" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Project
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meetings Tab -->
+                <div class="tab-pane" id="meetings">
+                    <div class="content-section">
+                        <h2 class="section-title">Upcoming Meetings</h2>
+                        <div class="section-content">
+                            {% if mentor_meetings or collab_group_meetings or collab_project_meetings %}
+                                <div class="meetings-list">
+                                    {% if mentor_meetings %}
+                                        <div class="meetings-category">
+                                            <h3 class="meetings-category-title">Mentor Meetings</h3>
+                                            {% for meeting in mentor_meetings %}
+                                                <div class="meeting-card">
+                                                    <div class="meeting-card-header">
+                                                        <h4>{{ meeting.title }}</h4>
+                                                        <div class="meeting-card-meta">
+                                                            <span><i class="fas fa-calendar"></i> {{ meeting.meeting_time|date:"M d, Y" }}</span>
+                                                            <span><i class="fas fa-clock"></i> {{ meeting.meeting_time|time:"h:i A" }}</span>
+                                                            <span><i class="fas fa-hourglass"></i> {{ meeting.duration }} mins</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="meeting-card-footer">
+                                                        <div class="meeting-card-participants">
+                                                            <span>With: {{ meeting.mentor.full_name }}</span>
+                                                        </div>
+                                                        <a href="{{ meeting.meeting_link }}" target="_blank" class="btn btn-primary">
+                                                            <i class="fas fa-video"></i> Join Meeting
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if collab_group_meetings %}
+                                        <div class="meetings-category">
+                                            <h3 class="meetings-category-title">Group Collaboration Meetings</h3>
+                                            {% for meeting in collab_group_meetings %}
+                                                <div class="meeting-card">
+                                                    <div class="meeting-card-header">
+                                                        <h4>{{ meeting.meeting_title }}</h4>
+                                                        <div class="meeting-card-meta">
+                                                            <span><i class="fas fa-calendar"></i> {{ meeting.scheduled_time|date:"M d, Y" }}</span>
+                                                            <span><i class="fas fa-clock"></i> {{ meeting.scheduled_time|time:"h:i A" }}</span>
+                                                            <span><i class="fas fa-hourglass"></i> {{ meeting.duration }} mins</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="meeting-card-footer">
+                                                        <div class="meeting-card-participants">
+                                                            <span>With: {{ meeting.collaborator.full_name }}</span>
+                                                        </div>
+                                                        <a href="{{ meeting.zoom_link }}" target="_blank" class="btn btn-primary">
+                                                            <i class="fas fa-video"></i> Join Meeting
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if collab_project_meetings %}
+                                        <div class="meetings-category">
+                                            <h3 class="meetings-category-title">Project Collaboration Meetings</h3>
+                                            {% for meeting in collab_project_meetings %}
+                                                <div class="meeting-card">
+                                                    <div class="meeting-card-header">
+                                                        <h4>{{ meeting.meeting_title }}</h4>
+                                                        <div class="meeting-card-meta">
+                                                            <span><i class="fas fa-calendar"></i> {{ meeting.scheduled_time|date:"M d, Y" }}</span>
+                                                            <span><i class="fas fa-clock"></i> {{ meeting.scheduled_time|time:"h:i A" }}</span>
+                                                            <span><i class="fas fa-hourglass"></i> {{ meeting.duration }} mins</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="meeting-card-footer">
+                                                        <div class="meeting-card-participants">
+                                                            <span>With: {{ meeting.collaborator.full_name }}</span>
+                                                        </div>
+                                                        <a href="{{ meeting.zoom_link }}" target="_blank" class="btn btn-primary">
+                                                            <i class="fas fa-video"></i> Join Meeting
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <h3>No Upcoming Meetings</h3>
+                                    <p>There are no scheduled meetings for this group</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Sidebar -->
+        <div class="project-sidebar">
+            <!-- Group Leader Info -->
+            <div class="sidebar-section">
+                <h2 class="sidebar-title">Group Leader</h2>
+                <div class="sidebar-content">
+                    <div class="team-member leader">
+                        <div class="team-member-info">
+                            <h3>{{ group.leader.full_name }}</h3>
+                            <p>Leader</p>
+                            <p class="member-email">{{ group.leader.email }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Actions -->
+            <div class="sidebar-section">
+                <h2 class="sidebar-title">Group Actions</h2>
+                <div class="sidebar-content">
+                    <a href="{% url 'add_group_project' group.id %}" class="btn btn-primary btn-block">
+                        <i class="fas fa-plus"></i> Add Project
+                    </a>
+                    
+                    {% if is_leader %}
+                        <button onclick="document.getElementById('inviteModal').classList.add('show')" 
+                                class="btn btn-secondary btn-block">
+                            <i class="fas fa-user-plus"></i> Invite Member
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Group Stats -->
+            <div class="sidebar-section">
+                <h2 class="sidebar-title">Group Stats</h2>
+                <div class="sidebar-content">
+                    <div class="stats-item">
+                        <span class="stats-label">Members</span>
+                        <span class="stats-value">{{ members|length }}</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">Projects</span>
+                        <span class="stats-value">{{ projects|length }}</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">Active</span>
+                        <span class="stats-value status-active">Yes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invite Member Modal -->
+{% if is_leader %}
+<div id="inviteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Invite Member</h3>
+            <button onclick="document.getElementById('inviteModal').classList.remove('show')" 
+                    class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" action="{% url 'invite_member' group.id %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="username">Student Username</label>
+                    <input type="text" id="username" name="username" required
+                           placeholder="Enter username">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" 
+                        onclick="document.getElementById('inviteModal').classList.remove('show')"
+                        class="btn btn-secondary">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send Invitation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    /* Base Styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+
+    /* Container Layout */
+    .content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Back Navigation */
+    .back-navigation {
+        margin-bottom: 2rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #9d4edd;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+        color: #c77dff;
+    }
+
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+
+    /* Main Content Grid */
+    .main-content-grid {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2rem;
+    }
+
+    /* Project Header */
+    .project-header {
+        margin-bottom: 2rem;
+    }
+
+    .project-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .project-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #9d9d9d;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-badge.active {
+        background: rgba(157, 78, 221, 0.2);
+        color: #c77dff;
+    }
+
+    /* Project Tabs */
+    .project-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+        margin-bottom: 2rem;
+    }
+
+    .tab-button {
+        padding: 1rem 1.5rem;
+        background: transparent;
+        border: none;
+        color: #9d9d9d;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.3s ease;
+    }
+
+    .tab-button:hover {
+        color: #e0e0e0;
+    }
+
+    .tab-button.active {
+        color: #9d4edd;
+    }
+
+    .tab-button.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #9d4edd;
+    }
+
+    /* Tab Content */
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Content Sections */
+    .content-section {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-title {
+        color: #c77dff;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .section-content {
+        color: #e0e0e0;
+        line-height: 1.6;
+    }
+
+    /* Team Members */
+    .member-list {
+        margin-top: 1rem;
+    }
+
+    .team-member {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: rgba(20, 20, 20, 0.8);
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .team-member:hover {
+        background: rgba(30, 30, 30, 0.8);
+    }
+
+    .team-member.leader {
+        border-left: 3px solid #9d4edd;
+    }
+
+    .team-member.pending {
+        opacity: 0.7;
+    }
+
+    .team-member-info h3 {
+        color: #e0e0e0;
+        margin-bottom: 0.25rem;
+    }
+
+    .team-member-info p {
+        color: #9d9d9d;
+    }
+
+    .member-email {
+        color: #9d9d9d;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    .pending-members {
+        margin-top: 2rem;
+    }
+
+    .pending-title {
+        color: #ffc107;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    .invite-member {
+        margin-top: 1.5rem;
+    }
+
+    /* Projects Grid */
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .project-card {
+        background: rgba(20, 20, 20, 0.8);
+        border: 1px solid rgba(157, 78, 221, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .project-card:hover {
+        border-color: rgba(157, 78, 221, 0.3);
+        transform: translateY(-5px);
+    }
+
+    .project-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .project-card-title {
+        color: #e0e0e0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .project-card-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .project-card-title a:hover {
+        color: #9d4edd;
+    }
+
+    .project-card-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .project-card-status.in_progress {
+        background: rgba(0, 123, 255, 0.2);
+        color: #0d6efd;
+    }
+
+    .project-card-status.completed {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+
+    .project-card-description {
+        color: #9d9d9d;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .project-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .project-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        color: #9d9d9d;
+        font-size: 0.85rem;
+    }
+
+    .project-card-meta i {
+        color: #9d4edd;
+        margin-right: 0.25rem;
+    }
+
+    .project-card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Meetings List */
+    .meetings-list {
+        margin-top: 1rem;
+    }
+
+    .meetings-category {
+        margin-bottom: 2rem;
+    }
+
+    .meetings-category-title {
+        color: #9d4edd;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .meeting-card {
+        background: rgba(20, 20, 20, 0.8);
+        border: 1px solid rgba(157, 78, 221, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .meeting-card:hover {
+        border-color: rgba(157, 78, 221, 0.3);
+    }
+
+    .meeting-card-header {
+        margin-bottom: 1rem;
+    }
+
+    .meeting-card-header h4 {
+        color: #e0e0e0;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .meeting-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        color: #9d9d9d;
+        font-size: 0.85rem;
+    }
+
+    .meeting-card-meta i {
+        color: #9d4edd;
+        margin-right: 0.25rem;
+    }
+
+    .meeting-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .meeting-card-participants {
+        color: #9d9d9d;
+        font-size: 0.9rem;
+    }
+
+    /* Sidebar */
+    .project-sidebar {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+    }
+
+    .sidebar-section {
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(30, 30, 30, 0.8);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar-title {
+        color: #c77dff;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .sidebar-content {
+        color: #e0e0e0;
+    }
+
+    /* Stats */
+    .stats-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(157, 78, 221, 0.1);
+    }
+
+    .stats-label {
+        color: #9d9d9d;
+    }
+
+    .stats-value {
+        color: #e0e0e0;
+        font-weight: 500;
+    }
+
+    .status-active {
+        color: #28a745;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #9d9d9d;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #9d4edd;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        color: #e0e0e0;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .btn-primary {
+        background: #9d4edd;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #c77dff;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid #9d4edd;
+        color: #9d4edd;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(157, 78, 221, 0.1);
+    }
+
+    .btn-danger {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-danger:hover {
+        background: rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-warning {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .btn-warning:hover {
+        background: rgba(255, 193, 7, 0.3);
+    }
+
+    .btn-success {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-success:hover {
+        background: rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-block {
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.75rem;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: #121212;
+        border: 1px solid #9d4edd;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        color: #c77dff;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: #9d9d9d;
+        cursor: pointer;
+        font-size: 1.25rem;
+    }
+
+    .modal-close:hover {
+        color: #e0e0e0;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: #c77dff;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        background: rgba(20, 20, 20, 0.8);
+        color: #e0e0e0;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #9d4edd;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid rgba(157, 78, 221, 0.3);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 992px) {
+        .main-content-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .project-sidebar {
+            position: static;
+            order: -1;
+            margin-bottom: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .content-container {
+            padding: 1rem;
+        }
+
+        .project-title {
+            font-size: 2rem;
+        }
+
+        .project-tabs {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1rem;
+        }
+
+        .projects-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    // Tab Navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons and panes
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Show corresponding tab pane
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}
