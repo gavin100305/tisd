@@ -22,6 +22,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key')
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+else:
+    # Production hosts
+    ALLOWED_HOSTS = [
+        'tisd-fsd.onrender.com',
+        '.onrender.com',  # Allow all subdomains of onrender.com
+    ]
+
+CUSTOM_HOSTS = os.getenv('ALLOWED_HOSTS', '')
+if CUSTOM_HOSTS:
+    ALLOWED_HOSTS.extend([host.strip() for host in CUSTOM_HOSTS.split(',')])
+
 
 # Application definition
 INSTALLED_APPS = [
